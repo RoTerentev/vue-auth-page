@@ -1,10 +1,39 @@
 import Vue from 'vue';
 import Router from 'vue-router';
+
+import store from './store/index';
 import Home from './views/Home.vue';
+
+const SIGN_IN_URL: string = '/auth';
+const REGISTER_URL: string = '/register';
+
+// the authGuard`s clousure for redirect after sign in
+let redirectURL: string = '';
+
+const authGuard = (to: { path: string }, from: any, next: (path: string|void) => void) => {
+
+  if (store.getters['auth/isLogin']) {
+    if (redirectURL === '') {
+      return next();
+    }
+
+    const url = redirectURL;
+    redirectURL = '';
+    return next(url);
+
+  } else {
+    redirectURL = to.path;
+    if ([SIGN_IN_URL, REGISTER_URL].includes(redirectURL)) {
+      return next();
+    }
+    return next(SIGN_IN_URL);
+  }
+
+};
 
 Vue.use(Router);
 
-export default new Router({
+const router = new Router({
   mode: 'history',
   base: process.env.BASE_URL,
   routes: [
@@ -14,12 +43,18 @@ export default new Router({
       component: Home,
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ './views/About.vue'),
+      path: SIGN_IN_URL,
+      name: 'auth',
+      component: () => import(/* webpackChunkName: "auth" */ './views/auth/SignIn.vue'),
+    },
+    {
+      path: REGISTER_URL,
+      name: 'register',
+      component: () => import(/* webpackChunkName: "auth" */ './views/auth/Register.vue'),
     },
   ],
 });
+
+router.beforeEach(authGuard);
+
+export default router;
