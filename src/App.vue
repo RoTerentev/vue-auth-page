@@ -18,4 +18,7 @@
 .mt {
   margin-top: 50px;
 }
+.fz16{
+  font-size: 16px;
+}
 </style>
