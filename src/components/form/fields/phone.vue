@@ -45,7 +45,7 @@ export function validator(rule: any, value: string, callback: any): void {
 export default class FieldPhone extends Vue {
   @Prop({ type: String, default: '' }) private readonly value!: string;
 
-  private phone: string = '';
+  private phone: string = format(this.value || '');
 
   get input(): string {
     return this.phone;
