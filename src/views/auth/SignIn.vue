@@ -36,7 +36,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import Component from 'vue-class-component';
+import { Watch, Component } from 'vue-property-decorator';
 // TODO: add|check tree shaking
 import {
   Button,
@@ -85,33 +85,6 @@ const AuthStore = namespace('auth');
 })
 export default class SingInView extends Vue {
 
-  public get alert(): {title: string, msg: string, type: string, close: boolean } {
-    if (this.authError && this.authError !== '') {
-      return {title: 'Ошибка', msg: this.authError, type: 'error', close: true};
-    }
-
-    if (this.isLogin) {
-      return {title: 'Вы вошли под номером', msg: this.prettyPhone, type: 'success', close: false};
-    }
-
-    if (this.$route.query.new && this.person) {
-      return {title: 'Вы зарегистрировались', msg: `под номером ${this.prettyPhone}, как ${fullname(this.person)}`, type: 'info', close: false};
-    }
-
-    return {title: '', msg: '', type: '',  close: true};
-  }
-
-  public form: AuthCredentials = {
-    phone: '',
-    password: ''
-  };
-
-  public validateRules = {
-    phone: [{ required: true, validator: phoneValidator, trigger: 'change' }],
-    password: [
-      { required: true, validator: passwordValidator, trigger: 'change' }
-    ]
-  };
   @AuthStore.State((state) => state.person)
   private readonly person!: Person | null;
 
@@ -129,6 +102,42 @@ export default class SingInView extends Vue {
 
   @AuthStore.Action
   private signIn!: (arg: AuthCredentials) => void;
+
+  public form: AuthCredentials = {
+    phone: '',
+    password: ''
+  };
+
+  // TODO: need refactoring, looks like a dirty hack
+  @Watch('form.phone', {immediate: true})
+  onPhoneChange(val: string, oldVal: string) {
+    if(val==='' && typeof oldVal === 'undefined' && this.person && this.$route.query.new){
+      this.form.phone = this.person.phone.substr(2) || '';
+    }
+  }
+
+  public validateRules = {
+    phone: [{ required: true, validator: phoneValidator, trigger: 'change' }],
+    password: [
+      { required: true, validator: passwordValidator, trigger: 'change' }
+    ]
+  };
+
+  public get alert(): {title: string, msg: string, type: string, close: boolean } {
+    if (this.authError && this.authError !== '') {
+      return {title: 'Ошибка', msg: this.authError, type: 'error', close: true};
+    }
+
+    if (this.isLogin) {
+      return {title: 'Вы вошли под номером', msg: this.prettyPhone, type: 'success', close: false};
+    }
+
+    if (this.$route.query.new && this.person) {
+      return {title: 'Вы зарегистрировались', msg: `под номером ${this.prettyPhone}, как ${fullname(this.person)}`, type: 'info', close: false};
+    }
+
+    return {title: '', msg: '', type: '',  close: true};
+  }
 
   public submitForm(): void {
     const form = this.$refs['form:auth'] as Form;
