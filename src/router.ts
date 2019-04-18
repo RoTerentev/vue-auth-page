@@ -11,17 +11,17 @@ const REGISTER_URL: string = '/register';
 let redirectURL: string = '';
 
 const authGuard = (to: { path: string }, from: any, next: (path: string|void) => void) => {
-  
-  
+
+
   if (store.getters['auth/isLogin']) {
     if (redirectURL === '') {
       return next();
     }
-    
+
     const url = redirectURL;
     redirectURL = '';
     return next(url);
-    
+
   } else {
     if ([SIGN_IN_URL, REGISTER_URL].includes(to.path)) {
       return next();
